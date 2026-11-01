@@ -82,3 +82,35 @@ primeiro acerto.
 - [ ] A média de todos os alunos está igual à esperada
 - [ ] A situação de todos os alunos está igual à esperada
 - [ ] Consigo explicar, com minhas palavras, cada bug que corrigi
+
+## Sobre o bug
+
+Durante a análise do arquivo `src/main/groovy/Boletim.groovy`, foram identificados e corrigidos três bugs distintos que afetavam o cálculo das médias e a classificação final dos alunos:
+
+### [Issue #1 — Primeira nota ignorada no cálculo da média](https://github.com/nelsonlima1989/boletim-bug/issues/1)
+
+- **Causa:** No método `calcularMedia(List notas)`, o laço `for` iniciava no índice `1` (`for (int i = 1; i < notas.size(); i++)`). Como listas em Groovy possuem indexação iniciada em `0` (*zero-based*), a primeira nota (`notas[0]`) era ignorada na soma, mas o total continuava sendo dividido por `3` (`notas.size()`).
+- **Correção:** O índice inicial do laço `for` foi alterado de `i = 1` para `i = 0` (`for (int i = 0; i < notas.size(); i++)`), garantindo que todas as notas da lista sejam somadas.
+- **Commit:** `11c48ca`
+
+### [Issue #2 — Limite de recuperação incorreto](https://github.com/nelsonlima1989/boletim-bug/issues/2)
+
+- **Causa:** A constante `MEDIA_RECUPERACAO` estava definida como `6.5`, divergindo da regra de negócio especificada neste README, que estabelece que alunos com média maior ou igual a `5.0` e menor que `7.0` devem ficar em `Recuperação`. Isso fazia com que alunos como Bruno (média `6.00`) fossem classificados incorretamente como `Reprovado`.
+- **Correção:** O valor da constante `MEDIA_RECUPERACAO` foi alterado de `6.5` para `5.0` (`final MEDIA_RECUPERACAO = 5.0`).
+- **Commit:** `91348d1`
+
+### [Issue #3 — Condição de aprovação incorreta](https://github.com/nelsonlima1989/boletim-bug/issues/3)
+
+- **Causa:** No método `situacao(media, mediaAprovacao, mediaRecuperacao)`, a verificação de aprovação utilizava o operador relacional estrito `>` (`if (media > mediaAprovacao)`). Com isso, alunos com média exatamente igual à nota de corte `7.0` (casos de Carla e Diego) não atendiam à condição `7.0 > 7.0` e acabavam classificados incorretamente como `Recuperação`.
+- **Correção:** O operador de comparação foi alterado de `>` para `>=` (`if (media >= mediaAprovacao)`), contemplando médias iguais ou superiores a `7.0`.
+- **Commit:** `d724ae4`
+
+### Resultado final do boletim após as correções
+
+```text
+=== Boletim da turma ===
+Ana: média 8.17 - Aprovado
+Bruno: média 6.00 - Recuperação
+Carla: média 7.00 - Aprovado
+Diego: média 7.00 - Aprovado
+```
